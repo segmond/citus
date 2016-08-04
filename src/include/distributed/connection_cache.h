@@ -32,6 +32,14 @@
 /* SQL statement for testing */
 #define TEST_SQL "DO $$ BEGIN RAISE EXCEPTION 'Raised remotely!'; END $$"
 
+/*
+ * The XactOperations global variable is a bitwise OR of the following values
+ * used to track which operations have taken place so far in a transaction
+ * block. This information is then used to prohibit certain interleavings which
+ * might result in deadlocks or other undesirable outcomes.
+ */
+#define XACT_OP_DML 0x1 /* INSERT, UPDATE, DELETE */
+#define XACT_OP_DDL 0x2 /* ALTER TABLE, CREATE INDEX, etc. */
 
 /*
  * NodeConnectionKey acts as the key to index into the (process-local) hash
@@ -54,7 +62,7 @@ typedef struct NodeConnectionEntry
 
 
 /* state needed to prevent new connections during modifying transactions */
-extern bool IsModifyingTransaction;
+extern int XactOperations;
 
 
 /* function declarations for obtaining and using a connection */

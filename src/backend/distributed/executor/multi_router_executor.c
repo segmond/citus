@@ -228,7 +228,7 @@ InitTransactionStateForTask(Task *task)
 		participantEntry->connection = connection;
 	}
 
-	IsModifyingTransaction = true;
+	XactOperations |= XACT_OP_DML;
 }
 
 
@@ -1230,7 +1230,7 @@ RouterTransactionCallback(XactEvent event, void *arg)
 	}
 
 	/* reset transaction state */
-	IsModifyingTransaction = false;
+	XactOperations = 0x0;
 	xactParticipantHash = NULL;
 	xactShardConnSetList = NIL;
 	subXactAbortAttempted = false;

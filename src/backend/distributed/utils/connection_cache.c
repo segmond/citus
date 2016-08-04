@@ -30,8 +30,8 @@
 #include "utils/palloc.h"
 
 
-/* state needed to prevent new connections during modifying transactions */
-bool IsModifyingTransaction = false;
+/* state needed to keep track of operations used during a transaction */
+int XactOperations = 0x0;
 
 /*
  * NodeConnectionHash is the connection hash itself. It begins uninitialized.
@@ -377,7 +377,7 @@ ConnectToNode(char *nodeName, int32 nodePort, char *nodeUser)
 
 	sprintf(nodePortString, "%d", nodePort);
 
-	if (IsModifyingTransaction)
+	if (XactOperations & XACT_OP_DML)
 	{
 		ereport(ERROR, (errcode(ERRCODE_ACTIVE_SQL_TRANSACTION),
 						errmsg("cannot open new connections after the first modification "
