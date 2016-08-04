@@ -147,6 +147,14 @@ RouterExecutorStart(QueryDesc *queryDesc, int eflags, Task *task)
 		if (IsTransactionBlock() && xactParticipantHash == NULL)
 		{
 			InitTransactionStateForTask(task);
+
+			if (XactOperations != XACT_OP_DML)
+			{
+				ereport(ERROR, (errcode(ERRCODE_ACTIVE_SQL_TRANSACTION),
+								errmsg("distributed DML commands must not appear in "
+									   "transaction blocks which contain distributed "
+									   "DDL commands")));
+			}
 		}
 	}
 

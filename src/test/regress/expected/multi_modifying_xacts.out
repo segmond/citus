@@ -154,7 +154,7 @@ ABORT;
 BEGIN;
 INSERT INTO labs VALUES (6, 'Bell Labs');
 ALTER TABLE labs ADD COLUMN text motto;
-ERROR:  distributed DDL commands cannot run inside a transaction block
+ERROR:  distributed DDL commands must appear alone within transaction blocks
 COMMIT;
 BEGIN;
 INSERT INTO labs VALUES (6, 'Bell Labs');

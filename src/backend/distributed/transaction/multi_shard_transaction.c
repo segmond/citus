@@ -283,6 +283,7 @@ CompleteShardPlacementTransactions(XactEvent event, void *arg)
 
 	CloseConnections(shardPlacementConnectionList);
 	shardPlacementConnectionList = NIL;
+	XactOperations = 0x0;
 }
 
 

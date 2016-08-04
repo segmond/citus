@@ -1255,8 +1255,15 @@ ExecuteDistributedDDLCommand(Oid relationId, const char *ddlCommandString,
 {
 	bool executionOK = false;
 
-	PreventTransactionChain(isTopLevel, "distributed DDL commands");
+	if (IsInTransactionChain(isTopLevel) && XactOperations != 0)
+	{
+		ereport(ERROR, (errcode(ERRCODE_ACTIVE_SQL_TRANSACTION),
+						errmsg("distributed DDL commands must appear alone within "
+							   "transaction blocks")));
+	}
+
 	ShowNoticeIfNotUsing2PC();
+	XactOperations |= XACT_OP_DDL;
 
 	executionOK = ExecuteCommandOnWorkerShards(relationId, ddlCommandString);
 
