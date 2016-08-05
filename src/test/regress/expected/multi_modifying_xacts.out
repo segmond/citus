@@ -150,19 +150,41 @@ SELECT count(*) FROM researchers WHERE lab_id = 6;
 ERROR:  no transaction participant matches localhost:57638
 DETAIL:  Transactions which modify distributed tables may only target nodes affected by the modification command which began the transaction.
 ABORT;
--- applies to DDL or COPY, too
+-- applies to DDL, too
 BEGIN;
 INSERT INTO labs VALUES (6, 'Bell Labs');
-ALTER TABLE labs ADD COLUMN text motto;
+ALTER TABLE labs ADD COLUMN motto text;
 ERROR:  distributed DDL commands must appear alone within transaction blocks
 COMMIT;
+-- whether it occurs first or second
+BEGIN;
+ALTER TABLE labs ADD COLUMN motto text;
+NOTICE:  using one-phase commit for distributed DDL commands
+HINT:  You can enable two-phase commit for extra safety with: SET citus.multi_shard_commit_protocol TO '2pc'
+INSERT INTO labs VALUES (6, 'Bell Labs');
+ERROR:  distributed DML commands must not appear in transaction blocks which contain distributed DDL commands
+COMMIT;
+-- but the DDL should correctly roll back
+\d labs
+     Table "public.labs"
+ Column |  Type  | Modifiers 
+--------+--------+-----------
+ id     | bigint | not null
+ name   | text   | not null
+
+SELECT * FROM labs WHERE id = 6;
+ id | name 
+----+------
+(0 rows)
+
+-- COPY can't happen first,
 BEGIN;
 INSERT INTO labs VALUES (6, 'Bell Labs');
 \copy labs from stdin delimiter ','
 ERROR:  cannot open new connections after the first modification command within a transaction
 CONTEXT:  COPY labs, line 1: "10,Weyland-Yutani"
 COMMIT;
--- though the copy will work if before any modifications
+-- though it will work if before any modifications
 BEGIN;
 \copy labs from stdin delimiter ','
 SELECT name FROM labs WHERE id = 10;

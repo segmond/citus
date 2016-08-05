@@ -122,12 +122,23 @@ INSERT INTO labs VALUES (6, 'Bell Labs');
 SELECT count(*) FROM researchers WHERE lab_id = 6;
 ABORT;
 
--- applies to DDL or COPY, too
+-- applies to DDL, too
 BEGIN;
 INSERT INTO labs VALUES (6, 'Bell Labs');
-ALTER TABLE labs ADD COLUMN text motto;
+ALTER TABLE labs ADD COLUMN motto text;
 COMMIT;
 
+-- whether it occurs first or second
+BEGIN;
+ALTER TABLE labs ADD COLUMN motto text;
+INSERT INTO labs VALUES (6, 'Bell Labs');
+COMMIT;
+
+-- but the DDL should correctly roll back
+\d labs
+SELECT * FROM labs WHERE id = 6;
+
+-- COPY can't happen first,
 BEGIN;
 INSERT INTO labs VALUES (6, 'Bell Labs');
 \copy labs from stdin delimiter ','
@@ -135,7 +146,7 @@ INSERT INTO labs VALUES (6, 'Bell Labs');
 \.
 COMMIT;
 
--- though the copy will work if before any modifications
+-- though it will work if before any modifications
 BEGIN;
 \copy labs from stdin delimiter ','
 10,Weyland-Yutani
